@@ -12,9 +12,12 @@ else:
 
 pygame.mixer.init()
 move_sound = pygame.mixer.Sound('move_sound.mpeg')
-move_sound.set_volume(0)
+move_sound.set_volume(options.volume/10)
 score_sound = pygame.mixer.Sound('score_sound.mpeg')
-score_sound.set_volume(0)
+score_sound.set_volume(options.volume)
+pygame.mixer.music.load('music.mp3')
+pygame.mixer.music.play(-1)
+pygame.mixer.music.set_volume(options.music_volume)
 
 
 def left_arrow():
@@ -108,6 +111,7 @@ while run:
                 break
             else:
                 end = True
+                pause = True
                 break
 
     for event in pygame.event.get():
@@ -162,6 +166,23 @@ while run:
                         down_arrow()
         if event.type == pygame.MOUSEBUTTONDOWN:
             if pygame.Rect(width // 4, height // 8, 2 * width // 4, height // 8).collidepoint(event.pos) and pause:
+                if end:
+                    if score > scoreboard[9]:
+                        scoreboard[9] = score
+                        scoreboard.sort(reverse=True)
+                        file = open('scoreboard.txt', 'w')
+                        for line in scoreboard:
+                            file.write(f'{line}\n')
+                    pool = methods.generate_pool(options.x_size, options.y_size)
+                    shape = random.choice(['o', 'i', 'j', 'l', 'z', 't', 's'])
+                    x = len(pool[0]) // 2
+                    y = len(pool) - 2
+                    color = methods.generate_color_rgb()
+                    turn = 0
+                    new_shape = random.choice(['o', 'i', 'j', 'l', 'z', 't', 's'])
+                    new_color = methods.generate_color_rgb()
+                    methods.generate_shape(pool, shape, x, y, color, turn)
+                    end = False
                 pause = False
             if pygame.Rect(width // 4, 3 * height // 8, 2 * width // 4, height // 8).collidepoint(event.pos) and pause:
                 run = False
@@ -186,7 +207,9 @@ while run:
     for i in range(len(scoreboard)):
         screen.blit(pygame.font.SysFont('Comic Sans MS', 30).render(f'{scoreboard[i]}', False, 'white'), (width - 175, 40*(i+1)))
     screen.blit(methods.generate_pool_img(methods.generate_shape(methods.generate_pool(4, 4), new_shape, 2, 1, new_color, 0)), (width-150, height-150))
+    pygame.mixer.music.unpause()
     if pause:
+        pygame.mixer.music.pause()
         screen.fill('black')
         pygame.draw.rect(screen, 'white', pygame.Rect(width // 4, height // 8, 2 * width // 4, height // 8))
         text = pygame.font.SysFont('Comic Sans MS', height // 26).render('Играть', False, 'black')
